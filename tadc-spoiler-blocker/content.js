@@ -4,6 +4,9 @@ const spoilerWords = [
     "digital circus",
     "glitch",
     "glitch productions",
+    "ep9",
+    "episode 9",
+    "ep 9",
     "pomni",
     "jax",
     "caine",
@@ -17,33 +20,75 @@ const spoilerWords = [
 
 function containsSpoiler(text) {
     const lower = text.toLowerCase();
-
     return spoilerWords.some(word => lower.includes(word));
 }
 
-function blockElement(element) {
-    if (element.dataset.spoilerBlocked) return;
+function createOverlay(target) {
+    if (target.dataset.spoilerBlocked === "true") return;
 
-    element.dataset.spoilerBlocked = "true";
+    target.dataset.spoilerBlocked = "true";
+
+    // Make sure parent positioning works
+    const style = window.getComputedStyle(target);
+
+    if (style.position === "static") {
+        target.style.position = "relative";
+    }
 
     const overlay = document.createElement("div");
     overlay.className = "spoiler-overlay";
-    overlay.innerText = "POTENTIAL SPOILER\n(click to reveal)";
+    overlay.textContent = "POTENTIAL SPOILER";
 
-    overlay.addEventListener("click", () => {
+    overlay.addEventListener("click", (e) => {
+        e.stopPropagation();
         overlay.remove();
     });
 
-    element.style.position = "relative";
-    element.appendChild(overlay);
+    target.appendChild(overlay);
+}
+
+function isReasonablePost(el) {
+    const text = el.innerText;
+
+    if (!text) return false;
+
+    // Avoid giant containers
+    if (text.length > 5000) return false;
+
+    // Ignore tiny elements
+    if (text.length < 20) return false;
+
+    // Ignore body/html
+    const tag = el.tagName.toLowerCase();
+
+    if (tag === "body" || tag === "html") {
+        return false;
+    }
+
+    const rect = el.getBoundingClientRect();
+
+    // Ignore gigantic fullscreen elements
+    if (
+        rect.width > window.innerWidth * 0.95 &&
+        rect.height > window.innerHeight * 0.95
+    ) {
+        return false;
+    }
+
+    return true;
 }
 
 function scanPage() {
-    const elements = document.querySelectorAll("div, article, section");
+    const elements = document.querySelectorAll(
+        "article, div, section"
+    );
 
     elements.forEach(el => {
-        if (el.innerText && containsSpoiler(el.innerText)) {
-            blockElement(el);
+        if (
+            isReasonablePost(el) &&
+            containsSpoiler(el.innerText)
+        ) {
+            createOverlay(el);
         }
     });
 }
