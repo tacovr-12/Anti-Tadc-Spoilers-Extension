@@ -28,7 +28,6 @@ function createOverlay(target) {
 
     target.dataset.spoilerBlocked = "true";
 
-    // Make sure parent positioning works
     const style = window.getComputedStyle(target);
 
     if (style.position === "static") {
@@ -52,13 +51,10 @@ function isReasonablePost(el) {
 
     if (!text) return false;
 
-    // Avoid giant containers
     if (text.length > 5000) return false;
 
-    // Ignore tiny elements
     if (text.length < 20) return false;
 
-    // Ignore body/html
     const tag = el.tagName.toLowerCase();
 
     if (tag === "body" || tag === "html") {
@@ -67,7 +63,6 @@ function isReasonablePost(el) {
 
     const rect = el.getBoundingClientRect();
 
-    // Ignore gigantic fullscreen elements
     if (
         rect.width > window.innerWidth * 0.95 &&
         rect.height > window.innerHeight * 0.95
