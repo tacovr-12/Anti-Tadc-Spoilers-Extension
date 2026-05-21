@@ -5,6 +5,9 @@ How to install it in Chrome/Opera/Edge
 
 Open:
 chrome://extensions/
+opera://extensions/
+edge://extensions/
+etc.
 
 Opera users pretending they are not using Chrome underneath. Adorable.
 
