@@ -23,78 +23,65 @@ function containsSpoiler(text) {
     return spoilerWords.some(word => lower.includes(word));
 }
 
-function createOverlay(target) {
-    if (target.dataset.spoilerBlocked === "true") return;
+function getCandidates() {
+    return document.querySelectorAll([
+        "ytd-video-renderer",
+        "ytd-rich-item-renderer",
+        "article"
+    ].join(","));
+}
 
-    target.dataset.spoilerBlocked = "true";
+function isValidPost(el) {
+    if (!el || !el.innerText) return false;
 
-    const style = window.getComputedStyle(target);
+    const text = el.innerText.trim();
 
-    if (style.position === "static") {
-        target.style.position = "relative";
+    if (text.length < 40 || text.length > 5000) return false;
+
+    if (el.closest("header, nav, form, ytd-masthead")) return false;
+
+    const rect = el.getBoundingClientRect();
+
+    if (rect.width > window.innerWidth * 0.95 &&
+        rect.height > window.innerHeight * 0.9) return false;
+
+    return true;
+}
+
+function block(el) {
+    if (el.dataset.spoilerBlocked) return;
+
+    el.dataset.spoilerBlocked = "true";
+
+    if (getComputedStyle(el).position === "static") {
+        el.style.position = "relative";
     }
 
     const overlay = document.createElement("div");
     overlay.className = "spoiler-overlay";
-    overlay.textContent = "POTENTIAL SPOILER";
+    overlay.textContent = "POTENTIAL SPOILER\n(click to reveal)";
 
     overlay.addEventListener("click", (e) => {
         e.stopPropagation();
         overlay.remove();
     });
 
-    target.appendChild(overlay);
+    el.appendChild(overlay);
 }
 
-function isReasonablePost(el) {
-    const text = el.innerText;
-
-    if (!text) return false;
-
-    if (text.length > 5000) return false;
-
-    if (text.length < 20) return false;
-
-    const tag = el.tagName.toLowerCase();
-
-    if (tag === "body" || tag === "html") {
-        return false;
-    }
-
-    const rect = el.getBoundingClientRect();
-
-    if (
-        rect.width > window.innerWidth * 0.95 &&
-        rect.height > window.innerHeight * 0.95
-    ) {
-        return false;
-    }
-
-    return true;
-}
-
-function scanPage() {
-    const elements = document.querySelectorAll(
-        "article, div, section"
-    );
-
-    elements.forEach(el => {
-        if (
-            isReasonablePost(el) &&
-            containsSpoiler(el.innerText)
-        ) {
-            createOverlay(el);
+function scan() {
+    getCandidates().forEach(el => {
+        if (isValidPost(el) && containsSpoiler(el.innerText)) {
+            block(el);
         }
     });
 }
 
-scanPage();
+scan();
 
-const observer = new MutationObserver(() => {
-    scanPage();
-});
-
-observer.observe(document.body, {
+new MutationObserver(() => {
+    scan();
+}).observe(document.body, {
     childList: true,
     subtree: true
 });
