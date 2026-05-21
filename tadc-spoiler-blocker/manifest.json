@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "TADC Spoiler Blocker",
+  "version": "1.0",
+  "description": "Blocks potential Amazing Digital Circus Episode 9 spoilers.",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
